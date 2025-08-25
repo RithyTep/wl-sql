@@ -1,0 +1,97 @@
+{
+  "name": "wl-sql",
+  "displayName": "WL SQL",
+  "description": "Coding Convention",
+  "version": "0.0.2",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "publisher": "RithyTep",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/RithyTep/wl-sql"
+  },
+  "license": "MIT",
+  "categories": [
+    "Formatters",
+    "Linters",
+    "Snippets"
+  ],
+  "activationEvents": [
+    "onLanguage:sql"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "wl-sql.formatDocument",
+        "title": "Format SQL Document (WL Convention)",
+        "category": "WL SQL"
+      },
+      {
+        "command": "wl-sql.validateDocument",
+        "title": "Validate SQL Convention",
+        "category": "WL SQL"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "wl-sql.formatDocument",
+        "key": "shift+alt+f",
+        "when": "editorLangId == sql"
+      }
+    ],
+    "languages": [
+      {
+        "id": "sql",
+        "aliases": [
+          "SQL",
+          "sql"
+        ],
+        "extensions": [
+          ".sql"
+        ]
+      }
+    ],
+    "snippets": [
+      {
+        "language": "sql",
+        "path": "./snippets/sql-snippets.json"
+      }
+    ],
+    "configuration": {
+      "type": "object",
+      "title": "WL SQL Configuration",
+      "properties": {
+        "wl-sql.enableFormatOnSave": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic formatting on save"
+        },
+        "wl-sql.enableLinting": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable SQL convention linting"
+        },
+        "wl-sql.minNvarcharLength": {
+          "type": "number",
+          "default": 200,
+          "description": "Minimum length for NVARCHAR when unknown"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run esbuild-base -- --minify",
+    "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
+    "esbuild": "npm run esbuild-base -- --sourcemap",
+    "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
+    "test-compile": "tsc -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "esbuild": "^0.17.11",
+    "typescript": "^4.9.4"
+  }
+}

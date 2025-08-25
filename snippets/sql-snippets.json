@@ -1,0 +1,102 @@
+{
+  "Create Table Template": {
+    "prefix": [
+      "createtable",
+      "ct"
+    ],
+    "body": [
+      "CREATE TABLE [dbo].[$1]",
+      "(",
+      "\t[$2Id] INT NOT NULL PRIMARY KEY,",
+      "\t[$3] NVARCHAR(${4:200}) ${5:NOT NULL},",
+      "\t[IsEnabled] BIT NOT NULL DEFAULT 1,",
+      "\t[CreatedOn] DATETIME NOT NULL DEFAULT GETDATE(),",
+      "\t[ModifiedOn] DATETIME NULL",
+      ")"
+    ],
+    "description": "Create table following WL naming conventions"
+  },
+  "Stored Procedure Template": {
+    "prefix": [
+      "createsp",
+      "sp"
+    ],
+    "body": [
+      "CREATE PROCEDURE [dbo].[${1:ProjectName}_${2:FeatureName}_${3:1.0.0}]",
+      "\t@${4:parameterId} ${5:INT}${6:,}",
+      "\t@${7:parameterName} ${8:NVARCHAR(200)}${9: = NULL}",
+      "AS",
+      "BEGIN",
+      "\tSET NOCOUNT ON;",
+      "\t",
+      "\t$0",
+      "\t",
+      "END"
+    ],
+    "description": "Create stored procedure with version and WL conventions"
+  },
+  "Job Stored Procedure": {
+    "prefix": [
+      "jobsp",
+      "job"
+    ],
+    "body": [
+      "CREATE PROCEDURE [dbo].[Job_${1:ProcedureName}]",
+      "AS",
+      "BEGIN",
+      "\tSET NOCOUNT ON;",
+      "\tDECLARE @deletedRows BIGINT;",
+      "\tDECLARE @id BIGINT;",
+      "\tDECLARE @oneMonthDate DATETIME = DATEADD(DAY, -30, CAST(GETDATE() AS DATE));",
+      "\t",
+      "\tSELECT @id = MAX([Id]) FROM [${2:TableName}] WITH(NOLOCK)",
+      "\tWHERE [CreatedOn] < @oneMonthDate;",
+      "\t",
+      "\tSET @deletedRows = 1;",
+      "\t",
+      "\tWHILE (@deletedRows > 0 AND @id IS NOT NULL)",
+      "\tBEGIN",
+      "\t\tDELETE TOP (4000) FROM [${2:TableName}] WITH(ROWLOCK)",
+      "\t\tWHERE [Id] < @id;",
+      "\t\t",
+      "\t\tSET @deletedRows = @@ROWCOUNT;",
+      "\t\tWAITFOR DELAY '00:00:00.2';",
+      "\tEND",
+      "END"
+    ],
+    "description": "Job stored procedure template with batch delete"
+  },
+  "Select with NOLOCK": {
+    "prefix": [
+      "select",
+      "sel"
+    ],
+    "body": [
+      "SELECT [${1:Column1}], [${2:Column2}]",
+      "FROM [${3:dbo}].[${4:TableName}] WITH(NOLOCK)",
+      "WHERE [${5:Column}] = ${6:condition}$0"
+    ],
+    "description": "Select statement with NOLOCK and proper formatting"
+  },
+  "Inner Join": {
+    "prefix": [
+      "innerjoin",
+      "ij"
+    ],
+    "body": [
+      "INNER JOIN [${1:dbo}].[${2:TableName}] [${3:alias}] WITH(NOLOCK)",
+      "\tON [${4:table1}].[${5:column1}] = [${3:alias}].[${6:column2}]$0"
+    ],
+    "description": "Inner join with NOLOCK"
+  },
+  "Declare Variable": {
+    "prefix": [
+      "declare",
+      "dec"
+    ],
+    "body": [
+      "DECLARE @${1:variableName} ${2|INT,NVARCHAR(200),DECIMAL(19\\,6),BIT,DATETIME|}${3: = ${4:defaultValue}};$0"
+    ],
+    "description": "Declare variable in camelCase"
+  }
+}
