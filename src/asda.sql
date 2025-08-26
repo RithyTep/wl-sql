@@ -5,7 +5,7 @@ CREATE PROCEDURE [dbo].[Coloris_GameProvider_GetCustomerRecordReport_2.0.0] @pag
 @endDate DATETIME,
 @filterUsername NVARCHAR(50) = '' AS
 SET
-  NOCOUNT ON;
+  [NOCOUNT] ON;
 
 BEGIN DECLARE @searchedCustomerId INT = 0;
 
@@ -27,11 +27,11 @@ END
 END DECLARE @timeZone NVARCHAR(100);
 
 SELECT
-  @timeZone = TimeZoneName
+  @timeZone = [TimeZoneName]
 FROM
   [Account].[dbo].[Company] WITH(NOLOCK)
 WHERE
-  WebId = @webId;
+  [WebId] = @webId;
 
 DECLARE @isGmtMinus4 BIT = CASE
   WHEN @timeZone = 'SA Western Standard Time' THEN 1
@@ -40,16 +40,16 @@ END;
 
 DECLARE @statusStreamer INT = 32768;
 
-CREATE TABLE #playerList (
-WebId INT,
-CustomerId INT,
-UserName NVARCHAR(50),
-CreatedOn DATETIME,
+CREATE TABLE #[playerList] (
+[WebId] INT,
+[CustomerId] INT,
+[UserName] NVARCHAR(50),
+[CreatedOn] DATETIME,
 [IsAbleToSearch] BIT
 );
 
-INSERT INTO
-  #playerList ([WebId],[CustomerId],[UserName],[CreatedOn],[IsAbleToSearch])
+INSERT [INTO]
+  #[playerList] ([WebId],[CustomerId],[UserName],[CreatedOn],[IsAbleToSearch])
 SELECT
   [WebId],
   [CustomerId],
@@ -67,17 +67,17 @@ WHERE
     OR [CustomerId] = @searchedCustomerId
   );
 
-CREATE NONCLUSTERED INDEX IX_playerList_CustomerId_WebId ON #playerList ([CustomerId], [WebId]);
+CREATE NONCLUSTERED INDEX [IX_playerList_CustomerId_WebId] ON #[playerList] ([CustomerId], [WebId]);
 IF NOT EXISTS (
   SELECT
     1
   FROM
-    #playerList)
+    #[playerList])
     BEGIN
   SELECT
     808 AS [ErrorCode],
     'User Not Found' AS [ErrorMessage] RETURN
-END CREATE TABLE #bets
+END CREATE TABLE #[bets]
 (
   [WebId] INT,
   [CustomerId] INT,
@@ -136,10 +136,10 @@ END CREATE TABLE #bets
   [IsAbleToSearch] BIT
 );
 
-CREATE TABLE #tmpResettle ([WebId] INT, [RefNo] NVARCHAR(100), [CreatedOn] DATETIME, [ModifiedOn] DATETIME);
+CREATE TABLE #[tmpResettle] ([WebId] INT, [RefNo] NVARCHAR(100), [CreatedOn] DATETIME, [ModifiedOn] DATETIME);
 ;
 
-WITH cteResettle AS (
+WITH [cteResettle] AS (
   SELECT
     b.[WebId],
     b.[RefNo],
@@ -149,28 +149,28 @@ WITH cteResettle AS (
       PARTITION BY b.[RefNo]
       ORDER BY
         b.[CreatedOn] DESC
-    ) AS rn
+    ) AS [rn]
   FROM
-    SboResettledBet b WITH(NOLOCK)
-    INNER JOIN #playerList p ON b.[CustomerId] = p.[customerId] AND b.[WebId] = p.[WebId]
+    [SboResettledBet] b WITH(NOLOCK)
+    INNER JOIN #[playerList] p ON b.[CustomerId] = p.[customerId] AND b.[WebId] = p.[WebId]
   WHERE
     b.[WebId] = @webId
 )
-INSERT INTO
-  #tmpResettle ([WebId], [RefNo], [CreatedOn], [ModifiedOn])
+INSERT [INTO]
+  #[tmpResettle] ([WebId], [RefNo], [CreatedOn], [ModifiedOn])
 SELECT
   [WebId],
   [RefNo],
   [CreatedOn],
   [ModifiedOn]
 FROM
-  cteResettle
+  [cteResettle]
 WHERE
-  rn = 1;
+  [rn] = 1;
 
 -- Sports (SBO)
-INSERT INTO
-  #bets
+INSERT [INTO]
+  #[bets]
 SELECT
   p.[webId],
   p.[customerId],
@@ -189,23 +189,23 @@ SELECT
   b.[Currency],
   b.[RefNo],
   b.[SportsType] AS [MainBetSportsType],
-  bd.[SportType] AS [SubBetSportsType],
+  [bd].[SportType] AS [SubBetSportsType],
   b.[OrderTime],
-  bd.[BetOption],
-  bd.[Odds] AS [SubBetOdds],
-  bd.[MarketType],
-  bd.[BetType],
-  bd.[HandicapPoint],
-  bd.[LiveScore],
-  bd.[HalfTimeScore],
-  bd.[FullTimeScore],
+  [bd].[BetOption],
+  [bd].[Odds] AS [SubBetOdds],
+  [bd].[MarketType],
+  [bd].[BetType],
+  [bd].[HandicapPoint],
+  [bd].[LiveScore],
+  [bd].[HalfTimeScore],
+  [bd].[FullTimeScore],
   CASE
     WHEN b.[BetType] = 666 THEN 'Sports-P2P'
-    ELSE bd.[Match]
+    ELSE [bd].[Match]
   END,
-  bd.[CustomizedBetType],
-  bd.[KickOffTime],
-  bd.[League],
+  [bd].[CustomizedBetType],
+  [bd].[KickOffTime],
+  [bd].[League],
   CASE
     WHEN @isGmtMinus4 = 1 THEN b.[WinlostDate]
     ELSE b.[WinlostDateByTimeZone]
@@ -231,8 +231,8 @@ SELECT
     END
   END,
   CASE
-    WHEN bd.[IsHalfWinlose] = 1 THEN 'Half ' + bd.[Status]
-    ELSE bd.[Status]
+    WHEN [bd].[IsHalfWinlose] = 1 THEN 'Half ' + [bd].[Status]
+    ELSE [bd].[Status]
   END,
   b.[ExchangeRate],
   0 AS [IsShowBetDetailButton],
@@ -248,8 +248,8 @@ SELECT
   b.[IsLive],
   '',
   CASE
-    WHEN b.[isLive] = 1 THEN 'Live! ' + bd.[LiveScore]
-    ELSE CONVERT(VARCHAR(20), bd.[KickOffTime], 120)
+    WHEN b.[isLive] = 1 THEN 'Live! ' + [bd].[LiveScore]
+    ELSE CONVERT(VARCHAR(20), [bd].[KickOffTime], 120)
   END AS [MatchTimeOrScoreAtThatTime],
   r.[CreatedOn] AS [RollbackTime],
   r.[ModifiedOn] AS [ResettleTime],
@@ -268,72 +268,72 @@ SELECT
   b.[IsHalfWinLose],
   p.[IsAbleToSearch]
 FROM
-  vSboSportBets60 b WITH(NOLOCK)
-  JOIN vSboSportBetDetails60 bd WITH(NOLOCK) ON b.[RefNo] = bd.[RefNo]
-  LEFT JOIN #tmpResettle r ON b.[WebId] = r.[WebId] AND b.[RefNo] = r.[RefNo]
-  INNER JOIN #playerList p ON b.[WebId] = p.[webId] AND b.[CustomerId] = p.[customerId]
+  [vSboSportBets60] b WITH(NOLOCK)
+  JOIN [vSboSportBetDetails60] [bd] WITH(NOLOCK) ON b.[RefNo] = [bd].[RefNo]
+  LEFT JOIN #[tmpResettle] r ON b.[WebId] = r.[WebId] AND b.[RefNo] = r.[RefNo]
+  INNER JOIN #[playerList] p ON b.[WebId] = p.[webId] AND b.[CustomerId] = p.[customerId]
 WHERE
   b.[WebId] = @webId
   AND b.[OrderTime] BETWEEN @startDate
   AND @endDate;
 
 -- Virtual Sports
-INSERT INTO
-  #bets
+INSERT [INTO]
+  #[bets]
 SELECT
   p.[webId],
   p.[customerId],
   4,
   -1,
   'SBO Virtual Sports',
-  vsb.[username],
-  vsb.[Currency],
-  vsb.[RefNo],
-  vsb.[ProductType],
+  [vsb].[username],
+  [vsb].[Currency],
+  [vsb].[RefNo],
+  [vsb].[ProductType],
   '',
-  vsb.[OrderTime],
-  vsbd.[BetOption],
-  vsbd.[Odds] AS [SubBetOdds],
-  vsbd.[MarketType],
+  [vsb].[OrderTime],
+  [vsbd].[BetOption],
+  [vsbd].[Odds] AS [SubBetOdds],
+  [vsbd].[MarketType],
   0 AS [BetType],
   CASE
-    WHEN TRY_CONVERT(DECIMAL(12, 3), vsbd.[Hdp]) IS NULL THEN 0
-    ELSE CONVERT(DECIMAL(12, 3), vsbd.[Hdp])
+    WHEN [TRY_CONVERT](DECIMAL(12, 3), [vsbd].[Hdp]) IS NULL THEN 0
+    ELSE CONVERT(DECIMAL(12, 3), [vsbd].[Hdp])
   END,
   '',
-  vsbd.[HalfTimeScore],
-  vsbd.[FullTimeScore],
-  vsbd.[Match],
+  [vsbd].[HalfTimeScore],
+  [vsbd].[FullTimeScore],
+  [vsbd].[Match],
   '',
   CASE
-    WHEN @isGmtMinus4 = 1 THEN CONVERT(DATE, vsb.[WinlostDate])
-    ELSE CONVERT(DATE, vsb.[WinlostDateByTimeZone])
+    WHEN @isGmtMinus4 = 1 THEN CONVERT(DATE, [vsb].[WinlostDate])
+    ELSE CONVERT(DATE, [vsb].[WinlostDateByTimeZone])
   END AS [KickOffTime],
-  vsbd.[Hdp] AS [League],
+  [vsbd].[Hdp] AS [League],
   CASE
-    WHEN @isGmtMinus4 = 1 THEN CONVERT(DATE, vsb.[WinlostDate])
-    ELSE CONVERT(DATE, vsb.[WinlostDateByTimeZone])
+    WHEN @isGmtMinus4 = 1 THEN CONVERT(DATE, [vsb].[WinlostDate])
+    ELSE CONVERT(DATE, [vsb].[WinlostDateByTimeZone])
   END AS [WinLoseDate],
-  vsb.[Odds] AS [mainBetOdds],
+  [vsb].[Odds] AS [mainBetOdds],
   '',
-  vsb.[Stake],
-  vsb.[ActualStake],
+  [vsb].[Stake],
+  [vsb].[ActualStake],
   CASE
-    WHEN vsb.[Status] IN ('won', 'lose') THEN vsb.[ActualStake]
+    WHEN [vsb].[Status] IN ('won', 'lose') THEN [vsb].[ActualStake]
     ELSE 0
   END AS [NetTurnover],
-  vsb.[Status],
-  vsbd.[Status],
-  vsb.[ActualRate],
+  [vsb].[Status],
+  [vsbd].[Status],
+  [vsb].[ActualRate],
   0 AS [IsShowBetDetailButton],
   -1 AS [GameProviderId],
   4 AS [GameProviderType],
   p.[CreatedOn],
   '',
   CONVERT(NVARCHAR(50), [GameId]),
-  vsb.[ProductType],
-  vsb.[Winlost],
-  vsb.[PlayerComm],
+  [vsb].[ProductType],
+  [vsb].[Winlost],
+  [vsb].[PlayerComm],
   '-',
   0,
   '',
@@ -346,23 +346,23 @@ SELECT
   '',
   '',
   CASE
-    WHEN vsb.[Status] IN('won', 'lose', 'draw') THEN vsb.[ModifiedTime]
+    WHEN [vsb].[Status] IN('won', 'lose', 'draw') THEN [vsb].[ModifiedTime]
     ELSE NULL
   END,
   0 AS [IsHalfWinlose],
   p.[IsAbleToSearch]
 FROM
-  vSboVirtualSportBets60 vsb WITH(NOLOCK)
-  LEFT JOIN vSboVirtualSportSubBets60 vsbd WITH(NOLOCK) ON vsb.[RefNo] = vsbd.[RefNo]
-  INNER JOIN #playerList p ON vsb.[WebId] = p.[webId] AND vsb.[CustomerId] = p.[customerId]
+  [vSboVirtualSportBets60] [vsb] WITH(NOLOCK)
+  LEFT JOIN [vSboVirtualSportSubBets60] [vsbd] WITH(NOLOCK) ON [vsb].[RefNo] = [vsbd].[RefNo]
+  INNER JOIN #[playerList] p ON [vsb].[WebId] = p.[webId] AND [vsb].[CustomerId] = p.[customerId]
 WHERE
-  vsb.[WebId] = @webId
-  AND vsb.[OrderTime] BETWEEN @startDate
+  [vsb].[WebId] = @webId
+  AND [vsb].[OrderTime] BETWEEN @startDate
   AND @endDate;
 
 -- ThirdParty Sports
-INSERT INTO
-  #bets
+INSERT [INTO]
+  #[bets]
 SELECT
   p.[webId],
   p.[customerId],
@@ -372,31 +372,31 @@ SELECT
   b.[Username],
   b.[Currency],
   b.[RefNo],
-  bd.[SportType] AS [MainBetSportsType],
-  bd.[SportType] AS [SubBetSportsType],
+  [bd].[SportType] AS [MainBetSportsType],
+  [bd].[SportType] AS [SubBetSportsType],
   b.[OrderTime],
-  bd.[BetOption],
-  bd.[Odds] AS [SubBetOdds],
-  bd.[MarketType],
+  [bd].[BetOption],
+  [bd].[Odds] AS [SubBetOdds],
+  [bd].[MarketType],
   0,
-  bd.[HandicapPoint],
-  CONVERT(NVARCHAR, bd.[LiveHomeScore]) + ':' + CONVERT(NVARCHAR, bd.[LiveAwayScore]) AS [LiveScore],
-  bd.[HalfTimeScore],
-  bd.[FullTimeScore],
-  ISNULL(bd.[HomeTeam], '') + ' vs ' + ISNULL(bd.[AwayTeam], '') AS [Match],
+  [bd].[HandicapPoint],
+  CONVERT(NVARCHAR, [bd].[LiveHomeScore]) + ':' + CONVERT(NVARCHAR, [bd].[LiveAwayScore]) AS [LiveScore],
+  [bd].[HalfTimeScore],
+  [bd].[FullTimeScore],
+  ISNULL([bd].[HomeTeam], '') + ' vs ' + ISNULL([bd].[AwayTeam], '') AS [Match],
   '',
   CASE
-    WHEN @isGmtMinus4 = 1 THEN ISNULL(bd.[WinlostDate], b.[WinlostDate])
+    WHEN @isGmtMinus4 = 1 THEN ISNULL([bd].[WinlostDate], b.[WinlostDate])
     ELSE ISNULL(
-      bd.[WinlostDateByTimeZone],
+      [bd].[WinlostDateByTimeZone],
       b.[WinlostDateByTimeZone]
     )
   END,
-  ISNULL(bd.[League], ''),
+  ISNULL([bd].[League], ''),
   CASE
-    WHEN @isGmtMinus4 = 1 THEN ISNULL(bd.[WinlostDate], b.[WinlostDate])
+    WHEN @isGmtMinus4 = 1 THEN ISNULL([bd].[WinlostDate], b.[WinlostDate])
     ELSE ISNULL(
-      bd.[WinlostDateByTimeZone],
+      [bd].[WinlostDateByTimeZone],
       b.[WinlostDateByTimeZone]
     )
   END AS [WinLoseDate],
@@ -417,7 +417,7 @@ SELECT
     WHEN b.[Status] = 'void' THEN b.[StatusAtGameProvider]
     ELSE b.[Status]
   END,
-  bd.[Status],
+  [bd].[Status],
   b.[ExchangeRate],
   g.[IsShowBetDetailButton],
   g.[GameProviderId],
@@ -427,20 +427,20 @@ SELECT
   '',
   CASE
     WHEN b.[IsParlay] = 1 THEN 'Mix Parlay'
-    ELSE bd.[SportType]
+    ELSE [bd].[SportType]
   END AS [GameName],
   b.[Winlost],
   b.[PlayerComm],
   b.[Ip],
-  bd.[IsLive],
+  [bd].[IsLive],
   '',
   CASE
-    WHEN bd.[IsLive] = 1 THEN 'Live! ' + CONVERT(NVARCHAR, bd.[LiveHomeScore]) + ':' + CONVERT(NVARCHAR, bd.[LiveAwayScore])
+    WHEN [bd].[IsLive] = 1 THEN 'Live! ' + CONVERT(NVARCHAR, [bd].[LiveHomeScore]) + ':' + CONVERT(NVARCHAR, [bd].[LiveAwayScore])
     ELSE CONVERT(
       VARCHAR(20),
       CASE
-        WHEN @isGmtMinus4 = 1 THEN bd.[WinlostDate]
-        ELSE bd.[WinlostDateByTimeZone]
+        WHEN @isGmtMinus4 = 1 THEN [bd].[WinlostDate]
+        ELSE [bd].[WinlostDateByTimeZone]
       END,
       120
     )
@@ -462,10 +462,10 @@ SELECT
   b.[IsHalfWinlose],
   p.[IsAbleToSearch]
 FROM
-  vSboThirdPartySportBets60 b WITH(NOLOCK)
-  LEFT JOIN vSboThirdPartySportBetDetails60 bd WITH(NOLOCK) ON b.[RefNo] = bd.[RefNo]
-  AND bd.[Language] = 'en'
-  INNER JOIN vAllGameProvidersForReport g WITH(NOLOCK) ON b.[GPID] = g.[GameProviderId]
+  [vSboThirdPartySportBets60] b WITH(NOLOCK)
+  LEFT JOIN [vSboThirdPartySportBetDetails60] [bd] WITH(NOLOCK) ON b.[RefNo] = [bd].[RefNo]
+  AND [bd].[Language] = 'en'
+  INNER JOIN [vAllGameProvidersForReport] g WITH(NOLOCK) ON b.[GPID] = g.[GameProviderId]
   AND (
     g.[GameProviderProductType] IS NULL
     OR (
@@ -474,7 +474,7 @@ FROM
     )
     OR (b.[ProductType] = g.[GameProviderProductType])
   )
-  INNER JOIN #playerList p ON b.[WebId] = p.[webId] AND b.[CustomerId] = p.[customerId]
+  INNER JOIN #[playerList] p ON b.[WebId] = p.[webId] AND b.[CustomerId] = p.[customerId]
 WHERE
   b.[WebId] = @webId
   AND b.[OrderTime] BETWEEN @startDate
@@ -484,16 +484,16 @@ SELECT
   0 AS [errorCode],
   'success' AS [errorMessage];
 
-CREATE NONCLUSTERED INDEX IX_tmpbets_RefNo_OrderTime ON #bets ([RefNo], [OrderTime] DESC);
+CREATE NONCLUSTERED INDEX [IX_tmpbets_RefNo_OrderTime] ON #[bets] ([RefNo], [OrderTime] DESC);
 DECLARE @totalBetCount INT;
 
 SELECT
   @totalBetCount = COUNT(DISTINCT [RefNo])
 FROM
-  #bets;
+  #[bets];
 ;
 
-WITH Paged AS (
+WITH [Paged] AS (
   SELECT
     [MaxPage] = CASE
       WHEN @totalBetCount % @rowCountPerPage = 0 THEN @totalBetCount / @rowCountPerPage
@@ -582,7 +582,7 @@ WITH Paged AS (
       ELSE - [MemberWinLose]
     END AS [TaxableAmount]
   FROM
-    #bets
+    #[bets]
 )
 SELECT
   p.[MaxPage],
@@ -639,28 +639,28 @@ SELECT
   p.[GamePeriodId],
   p.[SettledTime],
   p.[IsAbleToSearch],
-  ISNULL(phone_val.[Value], '') AS [Phone],
-  ISNULL(address_val.[Value], '') AS [Address],
-  ISNULL(identity_val.[Value], '') AS [IdentityCardNumber],
+  ISNULL([phone_val].[Value], '') AS [Phone],
+  ISNULL([address_val].[Value], '') AS [Address],
+  ISNULL([identity_val].[Value], '') AS [IdentityCardNumber],
   p.[EstimateMaxPayoutAmount],
   p.[EstimateTaxableAmount],
   p.[TaxableAmount]
 FROM
-  Paged p
-  LEFT JOIN [Main].[dbo].[CompanyFlowCustomizeValue] phone_val WITH(NOLOCK) ON phone_val.[WebId] = @webId
-  AND phone_val.[CustomerId] = p.[CustomerId]
-  AND phone_val.[PropertyName] = 'Phone'
-  LEFT JOIN [Main].[dbo].[CompanyFlowCustomizeValue] address_val WITH(NOLOCK) ON address_val.[WebId] = @webId
-  AND address_val.[CustomerId] = p.[CustomerId]
-  AND address_val.[PropertyName] = 'Address'
-  LEFT JOIN [Main].[dbo].[CompanyFlowCustomizeValue] identity_val WITH(NOLOCK) ON identity_val.[WebId] = @webId
-  AND identity_val.[CustomerId] = p.[CustomerId]
-  AND identity_val.[PropertyName] = 'ID'
+  [Paged] p
+  LEFT JOIN [Main].[dbo].[CompanyFlowCustomizeValue] [phone_val] WITH(NOLOCK) ON [phone_val].[WebId] = @webId
+  AND [phone_val].[CustomerId] = p.[CustomerId]
+  AND [phone_val].[PropertyName] = 'Phone'
+  LEFT JOIN [Main].[dbo].[CompanyFlowCustomizeValue] [address_val] WITH(NOLOCK) ON [address_val].[WebId] = @webId
+  AND [address_val].[CustomerId] = p.[CustomerId]
+  AND [address_val].[PropertyName] = 'Address'
+  LEFT JOIN [Main].[dbo].[CompanyFlowCustomizeValue] [identity_val] WITH(NOLOCK) ON [identity_val].[WebId] = @webId
+  AND [identity_val].[CustomerId] = p.[CustomerId]
+  AND [identity_val].[PropertyName] = 'ID'
 WHERE
   p.[RowNumber] BETWEEN (@page - 1) * @rowCountPerPage + 1
   AND @page * @rowCountPerPage;
 
-DROP TABLE #tmpResettle;
-DROP TABLE #bets;
-DROP TABLE #playerList;
+DROP TABLE #[tmpResettle];
+DROP TABLE #[bets];
+DROP TABLE #[playerList];
 END

@@ -1,0 +1,51 @@
+## Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+## TypeScript / build
+dist/
+build/
+lib/
+esbuild.out.js
+*.tsbuildinfo
+
+## VS Code
+.vscode/
+.vscode/*
+
+## OS files
+.DS_Store
+
+## Environment
+.env
+.env.*.local
+
+## Test / coverage
+coverage/
+nyc_output/
+
+## Logs
+*.log
+
+## IDEs
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+## npm pack
+*.tgz
+
+## vsix (built extension files)
+*.vsix
+
+## temporary
+.cache/
+.ts-node/
+
+# Editor swap
+*~
+*.swp
