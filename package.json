@@ -2,7 +2,7 @@
   "name": "wl-sql",
   "displayName": "WL SQL",
   "description": "Coding Convention",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -26,6 +26,11 @@
       {
         "command": "wl-sql.formatDocument",
         "title": "Format SQL Document (WL Convention)",
+        "category": "WL SQL"
+      },
+      {
+        "command": "wl-sql.formatSelection",
+        "title": "Format SQL Selection (WL Convention)",
         "category": "WL SQL"
       },
       {
@@ -73,10 +78,50 @@
           "default": true,
           "description": "Enable SQL convention linting"
         },
+        "wl-sql.useBaseFormatter": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use poor-mans-t-sql-formatter as base formatter before applying WL conventions"
+        },
+        "wl-sql.maxLineWidth": {
+          "type": "number",
+          "default": 120,
+          "description": "Maximum line width for formatted SQL"
+        },
+        "wl-sql.expandCommaLists": {
+          "type": "boolean",
+          "default": true,
+          "description": "Expand comma-separated lists (SELECT columns, etc.) to separate lines"
+        },
+        "wl-sql.trailingCommas": {
+          "type": "boolean",
+          "default": true,
+          "description": "Place commas at the end of lines (vs beginning)"
+        },
+        "wl-sql.expandBooleanExpressions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Expand AND/OR conditions to separate lines"
+        },
+        "wl-sql.expandCaseStatements": {
+          "type": "boolean",
+          "default": true,
+          "description": "Expand CASE statements with each WHEN on a separate line"
+        },
+        "wl-sql.breakJoinOnSections": {
+          "type": "boolean",
+          "default": true,
+          "description": "Put JOIN ON conditions on separate lines"
+        },
+        "wl-sql.addNoLock": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically add WITH(NOLOCK) to table references"
+        },
         "wl-sql.minNvarcharLength": {
           "type": "number",
           "default": 200,
-          "description": "Minimum length for NVARCHAR when unknown"
+          "description": "Minimum length for NVARCHAR when unknown (linting warning)"
         }
       }
     }
@@ -86,16 +131,19 @@
     "esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
-    "test-compile": "tsc -p ./"
-  ,"test": "mocha -r ts-node/register 'src/test/formatter.test.ts' --exit"
+    "test-compile": "tsc -p ./",
+    "test": "mocha -r ts-node/register 'src/test/formatter.test.ts' --exit"
   },
   "devDependencies": {
-    "@types/vscode": "^1.74.0",
+    "@types/mocha": "^10.0.1",
     "@types/node": "16.x",
-  "@types/mocha": "^10.0.1",
+    "@types/vscode": "^1.74.0",
     "esbuild": "^0.17.11",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.4"
-  ,"mocha": "^10.2.0",
-  "ts-node": "^10.9.1"
+  },
+  "dependencies": {
+    "poor-mans-t-sql-formatter": "^1.6.10"
   }
 }

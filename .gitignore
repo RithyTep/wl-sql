@@ -5,6 +5,8 @@ yarn-debug.log*
 yarn-error.log*
 
 ## TypeScript / build
+out/
+out/*
 dist/
 build/
 lib/

@@ -10,6 +10,7 @@ export function activate(context: vscode.ExtensionContext) {
   // Register document formatting provider
   const formattingProvider = vscode.languages.registerDocumentFormattingEditProvider('sql', {
     provideDocumentFormattingEdits(document: vscode.TextDocument): vscode.TextEdit[] {
+      formatter.refreshConfig();
       const text = document.getText();
       const formattedText = formatter.format(text);
 
@@ -17,6 +18,20 @@ export function activate(context: vscode.ExtensionContext) {
         document.positionAt(0),
         document.positionAt(text.length)
       );
+
+      return [vscode.TextEdit.replace(range, formattedText)];
+    }
+  });
+
+  // Register selection formatting provider
+  const selectionFormattingProvider = vscode.languages.registerDocumentRangeFormattingEditProvider('sql', {
+    provideDocumentRangeFormattingEdits(
+      document: vscode.TextDocument,
+      range: vscode.Range
+    ): vscode.TextEdit[] {
+      formatter.refreshConfig();
+      const selectedText = document.getText(range);
+      const formattedText = formatter.format(selectedText);
 
       return [vscode.TextEdit.replace(range, formattedText)];
     }
@@ -43,6 +58,14 @@ export function activate(context: vscode.ExtensionContext) {
     const editor = vscode.window.activeTextEditor;
     if (editor && editor.document.languageId === 'sql') {
       vscode.commands.executeCommand('editor.action.formatDocument');
+    }
+  });
+
+  // Format selection command
+  const formatSelectionCommand = vscode.commands.registerCommand('wl-sql.formatSelection', () => {
+    const editor = vscode.window.activeTextEditor;
+    if (editor && editor.document.languageId === 'sql') {
+      vscode.commands.executeCommand('editor.action.formatSelection');
     }
   });
 
@@ -93,7 +116,9 @@ export function activate(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     formattingProvider,
+    selectionFormattingProvider,
     formatCommand,
+    formatSelectionCommand,
     validateCommand,
     onSaveListener,
     onChangeListener,
