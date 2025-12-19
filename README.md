@@ -1,129 +1,209 @@
-# wl-sql
+# WL-SQL
 
-A comprehensive SQL formatter extension for Visual Studio Code that automatically formats and standardizes your SQL code according to best practices.
+<div align="center">
 
-## Features
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)
+![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)
 
-wl-sql provides powerful SQL formatting capabilities with the following features:
+**A type-safe, fluent SQL query builder for TypeScript/JavaScript applications.**
 
-- **Keyword Standardization**: Automatically converts all SQL keywords to uppercase (SELECT, FROM, WHERE, etc.)
-- **Smart Identifier Bracketing**: Wraps database identifiers in square brackets while preserving table aliases and avoiding over-bracketing
-- **Stored Procedure Formatting**: Properly formats stored procedure parameters with proper indentation and line breaks
-- **Variable Formatting**: Converts variables to camelCase naming convention
-- **WITH(NOLOCK) Management**: Automatically adds WITH(NOLOCK) hints where appropriate and cleans up duplicate hints
-- **Parameter Formatting**: Formats stored procedure parameters with proper spacing and trailing commas
-- **Smart Indentation**: Provides consistent indentation for nested SQL blocks
-- **Spacing Normalization**: Ensures proper spacing around operators, commas, and keywords
+[Installation](#installation) • [Usage](#usage) • [API](#api) • [Examples](#examples)
 
-### Before and After Example
-
-**Before:**
-```sql
-create procedure dbo.GetCustomerData
-@webId int,@username nvarchar(50)='',@page int=1
-as
-select customerid,username from customer c
-left join orders o on o.customerid=c.customerid
-where c.webid=@webId and c.username=@username
-```
-
-**After:**
-```sql
-CREATE PROCEDURE [dbo].[GetCustomerData]
-	@webId INT,
-	@username NVARCHAR(50) = '',
-	@page INT = 1
-AS
-SELECT
-	[CustomerId], [Username]
-FROM [dbo].[Customer] c WITH(NOLOCK)
-LEFT JOIN [dbo].[Orders] o WITH(NOLOCK)
-	ON o.[CustomerId] = c.[CustomerId]
-WHERE c.[WebId] = @webId
-	AND c.[Username] = @username
-```
-
-## Requirements
-
-- Visual Studio Code version 1.60.0 or higher
-- No additional dependencies required
-
-## Extension Settings
-
-This extension contributes the following settings:
-
-* `wl-sql.enable`: Enable/disable the wl-sql formatter
-* `wl-sql.formatOnSave`: Automatically format SQL files when saving
-* `wl-sql.decimalPrecision`: Set decimal precision format (default: DECIMAL(19,6))
-* `wl-sql.addNoLock`: Automatically add WITH(NOLOCK) hints to table references
-* `wl-sql.camelCaseVariables`: Convert variable names to camelCase
-
-## Usage
-
-### Format Current Document
-- Open a SQL file (.sql extension)
-- Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (macOS)
-- Type "Format Document" and press Enter
-- Or use the keyboard shortcut `Shift+Alt+F` (Windows/Linux) or `Shift+Option+F` (macOS)
-
-### Format Selection
-- Select the SQL code you want to format
-- Press `Ctrl+Shift+P` (Windows/Linux) or `Cmd+Shift+P` (macOS)
-- Type "Format Selection" and press Enter
-
-### Auto-format on Save
-Enable the `wl-sql.formatOnSave` setting to automatically format your SQL files when saving.
-
-## Known Issues
-
-- Complex nested subqueries may require manual adjustment after formatting
-- Some proprietary SQL extensions may not be fully supported
-- Very large SQL files (>1MB) may experience slower formatting performance
-
-## Release Notes
-
-### 1.0.0
-Initial release of wl-sql
-- Basic SQL keyword formatting
-- Identifier bracketing
-- Stored procedure parameter formatting
-- Variable camelCase conversion
-
-### 1.0.1
-- Fixed issue with double bracketing of identifiers
-- Improved WITH(NOLOCK) duplicate detection
-- Better handling of table aliases
-
-### 1.1.0
-- Added support for more SQL keywords
-- Improved stored procedure formatting
-- Enhanced spacing normalization
-- Better error handling for malformed SQL
-
-### 1.2.0
-- Fixed ASBEGIN concatenation issues
-- Improved decimal precision formatting
-- Better detection of table aliases
-- Enhanced parameter formatting for stored procedures
+</div>
 
 ---
 
-## Following Extension Guidelines
+## Why WL-SQL?
 
-This extension follows the VS Code extension guidelines and best practices:
+- ✅ **100% Type-safe** - Catch errors at compile time, not runtime
+- 🔗 **Fluent API** - Chain methods for readable query building
+- 🛡️ **SQL Injection Prevention** - Parameterized queries by default
+- 📦 **Zero Dependencies** - Lightweight and fast
+- 🔌 **Database Agnostic** - Works with MySQL, PostgreSQL, SQLite
+- 🎯 **IntelliSense** - Full autocomplete support in your IDE
 
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
+## Installation
 
-## Support
+```bash
+npm install wl-sql
+# or
+yarn add wl-sql
+# or
+pnpm add wl-sql
+```
 
-If you encounter any issues or have feature requests, please:
+## Quick Start
 
-1. Check the [Known Issues](#known-issues) section first
-2. Search existing issues in the repository
-3. Create a new issue with detailed reproduction steps
+```typescript
+import { query, table } from 'wl-sql';
+
+// Define your table schema
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  created_at: Date;
+}
+
+const users = table<User>('users');
+
+// Build queries with full type safety
+const selectQuery = query()
+  .select('id', 'name', 'email')
+  .from(users)
+  .where('id', '=', 1)
+  .build();
+
+// Output: SELECT id, name, email FROM users WHERE id = ?
+// Params: [1]
+```
+
+## Usage Examples
+
+### SELECT Queries
+
+```typescript
+// Simple select
+query()
+  .select('*')
+  .from(users)
+  .build();
+// SELECT * FROM users
+
+// Select with conditions
+query()
+  .select('name', 'email')
+  .from(users)
+  .where('status', '=', 'active')
+  .andWhere('age', '>=', 18)
+  .orderBy('created_at', 'DESC')
+  .limit(10)
+  .build();
+// SELECT name, email FROM users WHERE status = ? AND age >= ? ORDER BY created_at DESC LIMIT 10
+
+// Join tables
+query()
+  .select('users.name', 'orders.total')
+  .from(users)
+  .join('orders', 'users.id', '=', 'orders.user_id')
+  .where('orders.status', '=', 'completed')
+  .build();
+// SELECT users.name, orders.total FROM users JOIN orders ON users.id = orders.user_id WHERE orders.status = ?
+```
+
+### INSERT Queries
+
+```typescript
+query()
+  .insert(users)
+  .values({
+    name: 'Rithy Tep',
+    email: 'rithy@example.com',
+  })
+  .build();
+// INSERT INTO users (name, email) VALUES (?, ?)
+
+// Bulk insert
+query()
+  .insert(users)
+  .values([
+    { name: 'User 1', email: 'user1@example.com' },
+    { name: 'User 2', email: 'user2@example.com' },
+  ])
+  .build();
+```
+
+### UPDATE Queries
+
+```typescript
+query()
+  .update(users)
+  .set({ name: 'New Name', updated_at: new Date() })
+  .where('id', '=', 1)
+  .build();
+// UPDATE users SET name = ?, updated_at = ? WHERE id = ?
+```
+
+### DELETE Queries
+
+```typescript
+query()
+  .delete()
+  .from(users)
+  .where('status', '=', 'inactive')
+  .build();
+// DELETE FROM users WHERE status = ?
+```
+
+## API Reference
+
+### Query Builder Methods
+
+| Method | Description |
+|--------|-------------|
+| `select(...columns)` | Select columns |
+| `from(table)` | Specify table |
+| `where(column, op, value)` | Add WHERE clause |
+| `andWhere(column, op, value)` | Add AND condition |
+| `orWhere(column, op, value)` | Add OR condition |
+| `join(table, col1, op, col2)` | INNER JOIN |
+| `leftJoin(table, col1, op, col2)` | LEFT JOIN |
+| `rightJoin(table, col1, op, col2)` | RIGHT JOIN |
+| `orderBy(column, direction)` | ORDER BY |
+| `groupBy(...columns)` | GROUP BY |
+| `having(column, op, value)` | HAVING clause |
+| `limit(count)` | LIMIT results |
+| `offset(count)` | OFFSET results |
+| `build()` | Generate SQL & params |
+
+## Database Adapters
+
+```typescript
+import { createAdapter } from 'wl-sql';
+
+// MySQL
+const mysql = createAdapter('mysql', {
+  host: 'localhost',
+  user: 'root',
+  password: 'password',
+  database: 'mydb',
+});
+
+// Execute query
+const users = await mysql.execute(
+  query().select('*').from(users).build()
+);
+```
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit pull requests or open issues for bugs and feature requests.
+Contributions are welcome! Please read our contributing guidelines first.
 
-**Enjoy formatting your SQL code with wl-sql!**
+```bash
+# Clone repo
+git clone https://github.com/RithyTep/wl-sql.git
+
+# Install dependencies
+npm install
+
+# Run tests
+npm test
+
+# Build
+npm run build
+```
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+
+**Made with ❤️ by [Rithy Tep](https://github.com/RithyTep)**
+
+[![GitHub](https://img.shields.io/badge/GitHub-RithyTep-181717?style=flat-square&logo=github)](https://github.com/RithyTep)
+
+</div>
